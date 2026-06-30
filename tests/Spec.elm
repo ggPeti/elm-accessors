@@ -302,12 +302,12 @@ suite =
                         asBlind =
                             L.foo
 
-                        asWriteOnlyPrism : WriteOnlyPrism fd rv (Maybe Int) Int x y
-                        asWriteOnlyPrism =
+                        asInjector : Injector fd rv (Maybe Int) Int x y
+                        asInjector =
                             Maybe.just
 
-                        asReadOnlyPrism : ReadOnlyPrism st rv (Maybe Int) Int x y
-                        asReadOnlyPrism =
+                        asCase : Case st rv (Maybe Int) Int x y
+                        asCase =
                             Maybe.just
 
                         asIso : Iso fd vw st rv Int String x y
@@ -321,10 +321,10 @@ suite =
                     , isoSet = set asIso "4" 1
                     , reviewed = new asReview 5
                     , blindName = name asBlind
-                    , writeOnlyTry = try asWriteOnlyPrism (Just 6)
-                    , writeOnlyNew = new asWriteOnlyPrism 7
-                    , readOnlySet = set asReadOnlyPrism 8 (Just 0)
-                    , readOnlyNew = new asReadOnlyPrism 9
+                    , injectorSet = set asInjector 8 (Just 6)
+                    , injectorNew = new asInjector 7
+                    , caseTry = try asCase (Just 0)
+                    , caseNew = new asCase 9
                     }
                         |> Expect.equal
                             { folded = [ 1, 2 ]
@@ -334,10 +334,10 @@ suite =
                             , isoSet = 4
                             , reviewed = Just 5
                             , blindName = ".foo"
-                            , writeOnlyTry = Just 6
-                            , writeOnlyNew = Just 7
-                            , readOnlySet = Just 8
-                            , readOnlyNew = Just 9
+                            , injectorSet = Just 8
+                            , injectorNew = Just 7
+                            , caseTry = Just 0
+                            , caseNew = Just 9
                             }
             ]
         ]

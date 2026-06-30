@@ -27,7 +27,7 @@ import Base exposing (Lens_)
     --> ("IT'S OVER!!!", 1)
 
 -}
-fst : Lens_ ls ( a, two ) ( b, two ) a b x y
+fst : Lens_ fd st vw ( a, two ) ( b, two ) a b x y
 fst =
     Base.lens ".1" Tuple.first (\( _, two ) a -> ( a, two ))
 
@@ -53,6 +53,6 @@ fst =
     --> ("IT'S OVER!!!", 9000)
 
 -}
-snd : Lens_ ls ( one, a ) ( one, b ) a b x y
+snd : Lens_ fd st vw ( one, a ) ( one, b ) a b x y
 snd =
     Base.lens ".2" Tuple.second (\( one, _ ) b -> ( one, b ))

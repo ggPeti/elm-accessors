@@ -1,12 +1,17 @@
 module Base exposing
     ( Optic
     , Iso, Lens, Prism, Traversal
+    , Fold, Getter, Setter, Review, Blind, Case, Injector
     , iso, lens, prism, traversal
     , get, all, try, has, map, set, new, name, to, from
     , ixd
     , Iso_, Lens_, Prism_, Traversal_
+    , Fold_, Getter_, Setter_, Review_, Blind_
+    , Case_, Injector_
     , An_Optic, An_Iso, A_Lens, A_Prism
     , An_Optic_, An_Iso_, A_Lens_, A_Prism_
+    , A_Fold, A_Getter, A_Setter, A_Review, A_Case, An_Injector
+    , A_Fold_, A_Getter_, A_Setter_, A_Review_, A_Case_, An_Injector_
     )
 
 {-|
@@ -16,6 +21,7 @@ module Base exposing
 
 @docs Optic
 @docs Iso, Lens, Prism, Traversal
+@docs Fold, Getter, Setter, Review, Blind, Case, Injector
 
 
 # Build your own accessors
@@ -38,8 +44,12 @@ Accessors are built using these functions:
 ## Type aliases for custom and action functions
 
 @docs Iso_, Lens_, Prism_, Traversal_
+@docs Fold_, Getter_, Setter_, Review_, Blind_
+@docs Case_, Injector_
 @docs An_Optic, An_Iso, A_Lens, A_Prism
 @docs An_Optic_, An_Iso_, A_Lens_, A_Prism_
+@docs A_Fold, A_Getter, A_Setter, A_Review, A_Case, An_Injector
+@docs A_Fold_, A_Getter_, A_Setter_, A_Review_, A_Case_, An_Injector_
 
 -}
 
@@ -55,7 +65,7 @@ Implementation: A relation is a banal record storing a `get` function and an
 `over` function.
 
 -}
-type Optic_ pr ls s t a b
+type Optic_ fd vw st rv s t a b
     = Optic (Internal s t a b)
 
 
@@ -68,111 +78,271 @@ type alias Internal s t a b =
     }
 
 
-internal : Optic_ pr ls s t a b -> Internal s t a b
+internal : Optic_ fd vw st rv s t a b -> Internal s t a b
 internal (Optic i) =
     i
 
 
-{-| Any Optic is both "lens" and "prism".
+{-| Any Optic.
 -}
-type alias Optic pr ls s t a b x y =
-    Optic_ pr ls a b x y -> Optic_ pr ls s t x y
+type alias Optic fd vw st rv s t a b x y =
+    Optic_ fd vw st rv a b x y -> Optic_ fd vw st rv s t x y
 
 
-{-| This MUST be a Prism or Iso
+{-| Any Optic that cannot change types.
 -}
-type alias An_Optic pr ls s a =
-    An_Optic_ pr ls s s a a
+type alias An_Optic fd vw st rv s a =
+    An_Optic_ fd vw st rv s s a a
 
 
-{-| Any Optic
+{-| Any Optic.
 -}
-type alias An_Optic_ pr ls s t a b =
-    Optic pr ls s t a b a b
+type alias An_Optic_ fd vw st rv s t a b =
+    Optic fd vw st rv s t a b a b
 
 
-{-| The isomorphism is both "lens" and "prism".
+{-| The isomorphism preserves fold, view, set, and review capabilities.
 -}
-type alias Iso pr ls s a x y =
-    Iso_ pr ls s s a a x y
+type alias Iso fd vw st rv s a x y =
+    Iso_ fd vw st rv s s a a x y
 
 
-{-| The isomorphism is both "lens" and "prism".
+{-| The isomorphism preserves fold, view, set, and review capabilities.
 -}
-type alias Iso_ pr ls s t a b x y =
-    Optic pr ls s t a b x y
+type alias Iso_ fd vw st rv s t a b x y =
+    Optic fd vw st rv s t a b x y
 
 
-{-| This MUST be a Prism or Iso
+{-| This MUST be an Iso.
 -}
 type alias An_Iso s a =
     An_Iso_ s s a a
 
 
-{-| This MUST be a Prism or Iso
+{-| This MUST be an Iso.
 -}
 type alias An_Iso_ s t a b =
-    Optic () () s t a b a b
+    Optic () () () () s t a b a b
 
 
 {-| `Lens` that cannot change type of the object.
 -}
-type alias Lens ls s a x y =
-    Lens_ ls s s a a x y
+type alias Lens fd st vw s a x y =
+    Lens_ fd st vw s s a a x y
 
 
-{-| The lens is "not a prism".
+{-| The lens preserves fold, set, and view capabilities.
 -}
-type alias Lens_ ls s t a b x y =
-    Optic Never ls s t a b x y
+type alias Lens_ fd st vw s t a b x y =
+    Optic fd vw st Never s t a b x y
 
 
-{-| This MUST be a non-type changing Lens or Iso
+{-| This MUST be a non-type changing Lens, Iso, or equivalent optic with fold, view, and set capabilities.
 -}
-type alias A_Lens pr s a =
-    A_Lens_ pr s s a a
+type alias A_Lens rv s a =
+    A_Lens_ rv s s a a
 
 
-{-| This MUST be a Lens or Iso
+{-| This MUST be a Lens, Iso, or equivalent optic with fold, view, and set capabilities.
 -}
-type alias A_Lens_ pr s t a b =
-    Optic pr () s t a b a b
+type alias A_Lens_ rv s t a b =
+    Optic () () () rv s t a b a b
 
 
 {-| `Prism` that cannot change the type of the object.
 -}
-type alias Prism pr s a x y =
-    Prism_ pr s s a a x y
+type alias Prism fd st rv s a x y =
+    Prism_ fd st rv s s a a x y
 
 
-{-| The prism is "not a lens".
+{-| The prism can fold, set, and review.
 -}
-type alias Prism_ pr s t a b x y =
-    Optic pr Never s t a b x y
+type alias Prism_ fd st rv s t a b x y =
+    Optic fd Never st rv s t a b x y
 
 
-{-| This MUST be a non-type changing Prism or Iso
+{-| This MUST be a non-type changing Prism, Iso, or equivalent optic with fold and review capabilities.
 -}
-type alias A_Prism ls s a =
-    A_Prism_ ls s s a a
+type alias A_Prism vw st s a =
+    A_Prism_ vw st s s a a
 
 
-{-| This MUST be a Prism or Iso
+{-| This MUST be a Prism, Iso, or equivalent optic with fold and review capabilities.
 -}
-type alias A_Prism_ ls s t a b =
-    Optic () ls s t a b a b
+type alias A_Prism_ vw st s t a b =
+    Optic () vw st () s t a b a b
 
 
 {-| `Traversal` that cannot change the type of the object.
 -}
-type alias Traversal s a x y =
-    Traversal_ s s a a x y
+type alias Traversal fd st s a x y =
+    Traversal_ fd st s s a a x y
 
 
-{-| The traversal is neither "lens" or "prism".
+{-| The traversal can fold and set.
 -}
-type alias Traversal_ s t a b x y =
-    Optic Never Never s t a b x y
+type alias Traversal_ fd st s t a b x y =
+    Optic fd Never st Never s t a b x y
+
+
+{-| `Fold` that cannot change the type of the object.
+-}
+type alias Fold fd s a x y =
+    Fold_ fd s s a a x y
+
+
+{-| The fold can fold.
+-}
+type alias Fold_ fd s t a b x y =
+    Optic fd Never Never Never s t a b x y
+
+
+{-| `Getter` that cannot change the type of the object.
+-}
+type alias Getter vw fd s a x y =
+    Getter_ vw fd s s a a x y
+
+
+{-| The getter preserves view and fold capabilities.
+-}
+type alias Getter_ vw fd s t a b x y =
+    Optic fd vw Never Never s t a b x y
+
+
+{-| `Setter` that cannot change the type of the object.
+-}
+type alias Setter st s a x y =
+    Setter_ st s s a a x y
+
+
+{-| The setter can set.
+-}
+type alias Setter_ st s t a b x y =
+    Optic Never Never st Never s t a b x y
+
+
+{-| `Review` that cannot change the type of the object.
+-}
+type alias Review rv s a x y =
+    Review_ rv s s a a x y
+
+
+{-| The review can review.
+-}
+type alias Review_ rv s t a b x y =
+    Optic Never Never Never rv s t a b x y
+
+
+{-| `Blind` optic that cannot fold, view, set, or review.
+-}
+type alias Blind s a x y =
+    Blind_ s s a a x y
+
+
+{-| The blind optic has no action capabilities.
+-}
+type alias Blind_ s t a b x y =
+    Optic Never Never Never Never s t a b x y
+
+
+{-| `Case` that cannot change the type of the object.
+-}
+type alias Case fd rv s a x y =
+    Case_ fd rv s s a a x y
+
+
+{-| The case can fold and review.
+-}
+type alias Case_ fd rv s t a b x y =
+    Optic fd Never Never rv s t a b x y
+
+
+{-| `Injector` that cannot change the type of the object.
+-}
+type alias Injector st rv s a x y =
+    Injector_ st rv s s a a x y
+
+
+{-| The injector can set and review.
+-}
+type alias Injector_ st rv s t a b x y =
+    Optic Never Never st rv s t a b x y
+
+
+{-| This MUST be a non-type changing optic with a fold capability.
+-}
+type alias A_Fold vw st rv s a =
+    A_Fold_ vw st rv s s a a
+
+
+{-| This MUST be an optic with a fold capability.
+-}
+type alias A_Fold_ vw st rv s t a b =
+    Optic () vw st rv s t a b a b
+
+
+{-| This MUST be a non-type changing optic with a view capability.
+-}
+type alias A_Getter st rv s a =
+    A_Getter_ st rv s s a a
+
+
+{-| This MUST be an optic with a view capability.
+-}
+type alias A_Getter_ st rv s t a b =
+    Optic () () st rv s t a b a b
+
+
+{-| This MUST be a non-type changing optic with a set capability.
+-}
+type alias A_Setter fd vw rv s a =
+    A_Setter_ fd vw rv s s a a
+
+
+{-| This MUST be an optic with a set capability.
+-}
+type alias A_Setter_ fd vw rv s t a b =
+    Optic fd vw () rv s t a b a b
+
+
+{-| This MUST be a non-type changing optic with a review capability.
+-}
+type alias A_Review fd vw st s a =
+    A_Review_ fd vw st s s a a
+
+
+{-| This MUST be an optic with a review capability.
+-}
+type alias A_Review_ fd vw st s t a b =
+    Optic fd vw st () s t a b a b
+
+
+{-| This MUST be a non-type changing optic with fold and review capabilities.
+-}
+type alias A_Case vw st s a =
+    A_Case_ vw st s s a a
+
+
+{-| This MUST be an optic with fold and review capabilities.
+-}
+type alias A_Case_ vw st s t a b =
+    Optic () vw st () s t a b a b
+
+
+{-| This MUST be a non-type changing optic with set and review capabilities.
+-}
+type alias An_Injector fd vw s a =
+    An_Injector_ fd vw s s a a
+
+
+{-| This MUST be an optic with set and review capabilities.
+-}
+type alias An_Injector_ fd vw s t a b =
+    Optic fd vw () () s t a b a b
+
+
+type alias A_Traversal_ vw rv s t a b =
+    Optic () vw () rv s t a b a b
 
 
 {-| This exposes a description field that's necessary for use with the name function
@@ -189,7 +359,7 @@ lens :
     -> (s -> a)
     -> (s -> b -> t)
     -- Any optic composed with a Lens becomes "at least a Lens".
-    -> Lens_ ls s t a b x y
+    -> Lens_ fd st vw s t a b x y
 lens n sa sbt sub =
     let
         over_ : (a -> b) -> s -> t
@@ -220,7 +390,7 @@ prism :
     String
     -> (b -> t)
     -> (s -> Result t a)
-    -> Prism_ pr s t a b x y
+    -> Prism_ fd st rv s t a b x y
 prism n bt sta sub =
     let
         over_ : (a -> b) -> s -> t
@@ -254,7 +424,7 @@ traversal :
     String
     -> (s -> List a)
     -> ((a -> b) -> s -> t)
-    -> Traversal_ s t a b x y
+    -> Traversal_ fd st s t a b x y
 traversal n sa abst sub =
     Optic
         { view = void "Can't call `view` with a Traversal"
@@ -272,7 +442,7 @@ iso :
     String
     -> (s -> a)
     -> (b -> t)
-    -> Iso_ pr ls s t a b x y
+    -> Iso_ fd vw st rv s t a b x y
 iso n sa bt sub =
     let
         over_ : (a -> b) -> s -> t
@@ -289,7 +459,7 @@ iso n sa bt sub =
         |> dot sub
 
 
-dot : Optic_ pr ls u v a b -> Optic_ pr ls s t u v -> Optic_ pr ls s t a b
+dot : Optic_ fd vw st rv u v a b -> Optic_ fd vw st rv s t u v -> Optic_ fd vw st rv s t a b
 dot (Optic attribute) (Optic structure) =
     Optic
         { list = structure.list >> List.concatMap attribute.list
@@ -300,7 +470,7 @@ dot (Optic attribute) (Optic structure) =
         }
 
 
-ixd : An_Optic_ pr ls s t a b -> Traversal_ ( ix, s ) t a b x y
+ixd : A_Traversal_ vw rv s t a b -> Traversal_ fd st ( ix, s ) t a b x y
 ixd p =
     traversal (name p)
         (\( _, b ) -> all p b)
@@ -337,7 +507,7 @@ to =
     get
 
 
-id : Optic_ pr ls a b a b
+id : Optic_ fd vw st rv a b a b
 id =
     Optic
         { view = identity
@@ -371,7 +541,7 @@ id =
     --> True
 
 -}
-get : A_Lens_ pr s t a b -> s -> a
+get : A_Getter_ st rv s t a b -> s -> a
 get accessor =
     (id |> accessor |> internal).view
 
@@ -395,7 +565,7 @@ get accessor =
     --> True
 
 -}
-has : An_Optic_ ps ls s t a b -> s -> Bool
+has : A_Fold_ vw st rv s t a b -> s -> Bool
 has accessor s =
     try accessor s /= Nothing
 
@@ -411,7 +581,7 @@ has accessor s =
     --> Just "Stuff"
 
 -}
-try : An_Optic_ pr ls s t a b -> s -> Maybe a
+try : A_Fold_ vw st rv s t a b -> s -> Maybe a
 try accessor =
     (id |> accessor |> internal).list >> List.head
 
@@ -427,30 +597,30 @@ try accessor =
     --> []
 
 -}
-all : An_Optic_ pr ls s t a b -> s -> List a
+all : A_Fold_ vw st rv s t a b -> s -> List a
 all accessor =
     (id |> accessor |> internal).list
 
 
-set : An_Optic_ pr ls s t a b -> b -> (s -> t)
+set : A_Setter_ fd vw rv s t a b -> b -> (s -> t)
 set accessor =
     map accessor << always
 
 
-map : An_Optic_ pr ls s t a b -> (a -> b) -> s -> t
+map : A_Setter_ fd vw rv s t a b -> (a -> b) -> s -> t
 map accessor =
     (id |> accessor |> internal).over
 
 
 {-| Use prism to reconstruct.
 -}
-new : A_Prism_ ls s t a b -> b -> t
+new : A_Review_ fd vw st s t a b -> b -> t
 new accessor =
     (id |> accessor |> internal).make
 
 
 {-| -}
-name : An_Optic_ pr ls s t a b -> String
+name : An_Optic_ fd vw st rv s t a b -> String
 name accessor =
     (id |> accessor |> internal).name
 

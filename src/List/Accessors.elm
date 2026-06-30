@@ -29,7 +29,7 @@ import Base exposing (Traversal, Traversal_)
     --> {foo = [{bar = 3}, {bar = 4}, {bar = 5}]}
 
 -}
-each : Traversal_ (List a) (List b)  a b x y
+each : Traversal_ fd st (List a) (List b)  a b x y
 each =
     Base.traversal ":[]" identity List.map
 
@@ -67,7 +67,7 @@ each =
     --> {foo = [{bar = 3}, {bar = 4}, {bar = 5}]}
 
 -}
-eachIdx : Traversal_ (List a) (List b)  ( Int, a ) b x y
+eachIdx : Traversal_ fd st (List a) (List b)  ( Int, a ) b x y
 eachIdx =
     Base.traversal "#[]"
         (List.indexedMap Tuple.pair)
@@ -99,7 +99,7 @@ eachIdx =
     --> list
 
 -}
-at : Int -> Traversal (List a)  a x y
+at : Int -> Traversal fd st (List a)  a x y
 at key =
     Base.traversal ("[" ++ String.fromInt key ++ "]?")
         (List.foldl
@@ -131,19 +131,19 @@ at key =
 -- TODO: Add these back in the future maybe?
 -- {-| Everything except first n elements of the list.
 -- -}
--- drop : Int -> Optic pr ls (List a) (List a) x y -> Traversal (List a) (List a) x y
+-- drop : Int -> Optic fd vw st rv (List a) (List a) x y -> Traversal fd st (List a) (List a) x y
 -- drop i =
 --     Base.traversal "drop" (List.drop i >> (\x -> [ x ])) <|
 --         \f lst ->
 --             List.take i lst ++ f (List.drop i lst)
 -- {-| List head.
 -- -}
--- head : Optic pr ls a a x y -> Traversal (List a) (List a) x y
+-- head : Optic fd vw st rv a a x y -> Traversal fd st (List a) (List a) x y
 -- head =
 --     cons << Tuple.fst
 -- {-| Match head/tail of a non-empty list.
 -- -}
--- cons : Optic pr ls ( a, List a ) ( b, List b ) x y -> Prism pr (List a) (List b) x y
+-- cons : Optic fd vw st rv ( a, List a ) ( b, List b ) x y -> Prism fd st rv (List a) (List b) x y
 -- cons =
 --     Base.prism ":" (uncurry (::)) <|
 --         \lst ->
@@ -179,7 +179,7 @@ at key =
     --> list
 
 -}
-id : Int -> Traversal (List { a | id : Int })  { a | id : Int } x y
+id : Int -> Traversal fd st (List { a | id : Int })  { a | id : Int } x y
 id key =
     Base.traversal ("(" ++ String.fromInt key ++ ")?")
         (List.filterMap

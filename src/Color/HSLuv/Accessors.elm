@@ -22,6 +22,6 @@ import HSLuv exposing (HSLuv)
     --> Color.red
 
 -}
-iso : Iso pr ls Color HSLuv x y
+iso : Iso fd vw st rv Color HSLuv x y
 iso =
     Base.iso "color_hsluv" HSLuv.color (HSLuv.toColor >> Round.rgb)

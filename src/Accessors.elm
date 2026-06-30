@@ -1,12 +1,17 @@
 module Accessors exposing
     ( Optic
     , Iso, Lens, Prism, Traversal
+    , Fold, Getter, Setter, Review, Blind, Case, Injector
     , traversal, lens, prism, iso
     , get, all, try, has, is, map, over, set, new, name, to, from, swap
     , ixd
     , Iso_, Lens_, Prism_, Traversal_
+    , Fold_, Getter_, Setter_, Review_, Blind_
+    , Case_, Injector_
     , An_Optic, An_Iso, A_Lens, A_Prism
     , An_Optic_, An_Iso_, A_Lens_, A_Prism_
+    , A_Fold, A_Getter, A_Setter, A_Review, A_Case, An_Injector
+    , A_Fold_, A_Getter_, A_Setter_, A_Review_, A_Case_, An_Injector_
     , just, ok, err
     , values, keyed, key, keyI, key_
     , each, eachIdx, at
@@ -26,6 +31,7 @@ module Accessors exposing
 ## Type Aliases: are shorthands from the Optics nomenclature that make writing your own accessors more convenient and hopefully easier to understand.
 
 @docs Iso, Lens, Prism, Traversal
+@docs Fold, Getter, Setter, Review, Blind, Case, Injector
 
 
 ## Constructors
@@ -51,8 +57,12 @@ specific action on data using that accessor.
 ## Type aliases for custom and action functions
 
 @docs Iso_, Lens_, Prism_, Traversal_
+@docs Fold_, Getter_, Setter_, Review_, Blind_
+@docs Case_, Injector_
 @docs An_Optic, An_Iso, A_Lens, A_Prism
 @docs An_Optic_, An_Iso_, A_Lens_, A_Prism_
+@docs A_Fold, A_Getter, A_Setter, A_Review, A_Case, An_Injector
+@docs A_Fold_, A_Getter_, A_Setter_, A_Review_, A_Case_, An_Injector_
 
 
 ## Common Optics to mitigate `import` noise. Not everything is re-exported.
@@ -96,43 +106,43 @@ import Tuple.Accessors as Tuple
 -- Optics / Type Aliases
 
 
-{-| Any Optic is both "lens" and "prism".
+{-| Any Optic.
 -}
-type alias Optic pr ls s t a b x y =
-    Base.Optic pr ls s t a b x y
+type alias Optic fd vw st rv s t a b x y =
+    Base.Optic fd vw st rv s t a b x y
 
 
-{-| This MUST be a Prism or Iso
+{-| Any Optic that cannot change types.
 -}
-type alias An_Optic pr ls s a =
-    Base.An_Optic pr ls s a
+type alias An_Optic fd vw st rv s a =
+    Base.An_Optic fd vw st rv s a
 
 
-{-| Any Optic
+{-| Any Optic.
 -}
-type alias An_Optic_ pr ls s t a b =
-    Base.An_Optic_ pr ls s t a b
+type alias An_Optic_ fd vw st rv s t a b =
+    Base.An_Optic_ fd vw st rv s t a b
 
 
-{-| The isomorphism is both "lens" and "prism".
+{-| The isomorphism preserves fold, view, set, and review capabilities.
 -}
-type alias Iso pr ls s a x y =
-    Base.Iso pr ls s a x y
+type alias Iso fd vw st rv s a x y =
+    Base.Iso fd vw st rv s a x y
 
 
-{-| The isomorphism is both "lens" and "prism".
+{-| The isomorphism preserves fold, view, set, and review capabilities.
 -}
-type alias Iso_ pr ls s t a b x y =
-    Base.Iso_ pr ls s t a b x y
+type alias Iso_ fd vw st rv s t a b x y =
+    Base.Iso_ fd vw st rv s t a b x y
 
 
-{-| This MUST be a Prism or Iso
+{-| This MUST be an Iso.
 -}
 type alias An_Iso s a =
     Base.An_Iso s a
 
 
-{-| This MUST be a Prism or Iso
+{-| This MUST be an Iso.
 -}
 type alias An_Iso_ s t a b =
     Base.An_Iso_ s t a b
@@ -140,62 +150,218 @@ type alias An_Iso_ s t a b =
 
 {-| `Lens` that cannot change type of the object.
 -}
-type alias Lens ls s a x y =
-    Base.Lens ls s a x y
+type alias Lens fd st vw s a x y =
+    Base.Lens fd st vw s a x y
 
 
-{-| The lens is "not a prism".
+{-| The lens preserves fold, set, and view capabilities.
 -}
-type alias Lens_ ls s t a b x y =
-    Base.Lens_ ls s t a b x y
+type alias Lens_ fd st vw s t a b x y =
+    Base.Lens_ fd st vw s t a b x y
 
 
-{-| This MUST be a non-type changing Lens or Iso
+{-| This MUST be a non-type changing Lens, Iso, or equivalent optic with fold, view, and set capabilities.
 -}
-type alias A_Lens pr s a =
-    Base.A_Lens pr s a
+type alias A_Lens rv s a =
+    Base.A_Lens rv s a
 
 
-{-| This MUST be a Lens or Iso
+{-| This MUST be a Lens, Iso, or equivalent optic with fold, view, and set capabilities.
 -}
-type alias A_Lens_ pr s t a b =
-    Base.A_Lens_ pr s t a b
+type alias A_Lens_ rv s t a b =
+    Base.A_Lens_ rv s t a b
 
 
 {-| `Prism` that cannot change the type of the object.
 -}
-type alias Prism pr s a x y =
-    Base.Prism pr s a x y
+type alias Prism fd st rv s a x y =
+    Base.Prism fd st rv s a x y
 
 
-{-| The prism is "not a lens".
+{-| The prism can fold, set, and review.
 -}
-type alias Prism_ pr s t a b x y =
-    Base.Prism_ pr s t a b x y
+type alias Prism_ fd st rv s t a b x y =
+    Base.Prism_ fd st rv s t a b x y
 
 
-{-| This MUST be a non-type changing Prism or Iso
+{-| This MUST be a non-type changing Prism, Iso, or equivalent optic with fold and review capabilities.
 -}
-type alias A_Prism ls s a =
-    Base.A_Prism ls s a
+type alias A_Prism vw st s a =
+    Base.A_Prism vw st s a
 
 
-{-| This MUST be a Prism or Iso
+{-| This MUST be a Prism, Iso, or equivalent optic with fold and review capabilities.
 -}
-type alias A_Prism_ ls s t a b =
-    Base.A_Prism_ ls s t a b
+type alias A_Prism_ vw st s t a b =
+    Base.A_Prism_ vw st s t a b
 
 
 {-| `Traversal` that cannot change the type of the object.
 -}
-type alias Traversal s a x y =
-    Base.Traversal s a x y
+type alias Traversal fd st s a x y =
+    Base.Traversal fd st s a x y
 
 
-{-| The traversal is neither "lens" or "prism".
+{-| The traversal can fold and set.
 -}
-type alias Traversal_ s t a b x y =
-    Base.Traversal_ s t a b x y
+type alias Traversal_ fd st s t a b x y =
+    Base.Traversal_ fd st s t a b x y
+
+
+{-| `Fold` that cannot change the type of the object.
+-}
+type alias Fold fd s a x y =
+    Base.Fold fd s a x y
+
+
+{-| The fold can fold.
+-}
+type alias Fold_ fd s t a b x y =
+    Base.Fold_ fd s t a b x y
+
+
+{-| `Getter` that cannot change the type of the object.
+-}
+type alias Getter vw fd s a x y =
+    Base.Getter vw fd s a x y
+
+
+{-| The getter preserves view and fold capabilities.
+-}
+type alias Getter_ vw fd s t a b x y =
+    Base.Getter_ vw fd s t a b x y
+
+
+{-| `Setter` that cannot change the type of the object.
+-}
+type alias Setter st s a x y =
+    Base.Setter st s a x y
+
+
+{-| The setter can set.
+-}
+type alias Setter_ st s t a b x y =
+    Base.Setter_ st s t a b x y
+
+
+{-| `Review` that cannot change the type of the object.
+-}
+type alias Review rv s a x y =
+    Base.Review rv s a x y
+
+
+{-| The review can review.
+-}
+type alias Review_ rv s t a b x y =
+    Base.Review_ rv s t a b x y
+
+
+{-| `Blind` optic that cannot fold, view, set, or review.
+-}
+type alias Blind s a x y =
+    Base.Blind s a x y
+
+
+{-| The blind optic has no action capabilities.
+-}
+type alias Blind_ s t a b x y =
+    Base.Blind_ s t a b x y
+
+
+{-| `Case` that cannot change the type of the object.
+-}
+type alias Case fd rv s a x y =
+    Base.Case fd rv s a x y
+
+
+{-| The case can fold and review.
+-}
+type alias Case_ fd rv s t a b x y =
+    Base.Case_ fd rv s t a b x y
+
+
+{-| `Injector` that cannot change the type of the object.
+-}
+type alias Injector st rv s a x y =
+    Base.Injector st rv s a x y
+
+
+{-| The injector can set and review.
+-}
+type alias Injector_ st rv s t a b x y =
+    Base.Injector_ st rv s t a b x y
+
+
+{-| This MUST be a non-type changing optic with a fold capability.
+-}
+type alias A_Fold vw st rv s a =
+    Base.A_Fold vw st rv s a
+
+
+{-| This MUST be an optic with a fold capability.
+-}
+type alias A_Fold_ vw st rv s t a b =
+    Base.A_Fold_ vw st rv s t a b
+
+
+{-| This MUST be a non-type changing optic with a view capability.
+-}
+type alias A_Getter st rv s a =
+    Base.A_Getter st rv s a
+
+
+{-| This MUST be an optic with a view capability.
+-}
+type alias A_Getter_ st rv s t a b =
+    Base.A_Getter_ st rv s t a b
+
+
+{-| This MUST be a non-type changing optic with a set capability.
+-}
+type alias A_Setter fd vw rv s a =
+    Base.A_Setter fd vw rv s a
+
+
+{-| This MUST be an optic with a set capability.
+-}
+type alias A_Setter_ fd vw rv s t a b =
+    Base.A_Setter_ fd vw rv s t a b
+
+
+{-| This MUST be a non-type changing optic with a review capability.
+-}
+type alias A_Review fd vw st s a =
+    Base.A_Review fd vw st s a
+
+
+{-| This MUST be an optic with a review capability.
+-}
+type alias A_Review_ fd vw st s t a b =
+    Base.A_Review_ fd vw st s t a b
+
+
+{-| This MUST be a non-type changing optic with fold and review capabilities.
+-}
+type alias A_Case vw st s a =
+    Base.A_Case vw st s a
+
+
+{-| This MUST be an optic with fold and review capabilities.
+-}
+type alias A_Case_ vw st s t a b =
+    Base.A_Case_ vw st s t a b
+
+
+{-| This MUST be a non-type changing optic with set and review capabilities.
+-}
+type alias An_Injector fd vw s a =
+    Base.An_Injector fd vw s a
+
+
+{-| This MUST be an optic with set and review capabilities.
+-}
+type alias An_Injector_ fd vw s t a b =
+    Base.An_Injector_ fd vw s t a b
 
 
 
@@ -208,7 +374,7 @@ iso :
     String
     -> (s -> a)
     -> (b -> t)
-    -> Iso_ pr ls s t a b x y
+    -> Iso_ fd vw st rv s t a b x y
 iso =
     Base.iso
 
@@ -229,7 +395,7 @@ lens :
     String
     -> (s -> a)
     -> (s -> b -> t)
-    -> Lens_ ls s t a b x y
+    -> Lens_ fd st vw s t a b x y
 lens =
     Base.lens
 
@@ -248,7 +414,7 @@ prism :
     String
     -> (b -> t)
     -> (s -> Result t a)
-    -> Prism_ pr s t a b x y
+    -> Prism_ fd st rv s t a b x y
 prism =
     Base.prism
 
@@ -257,7 +423,7 @@ prism =
 for getting unique names out of compositions of accessors. This is useful when you
 want type safe keys for a Dictionary but you still want to use elm/core implementation.
 
-    each : Optic pr ls a b x y -> Traversal (List a) (List b) x y
+    each : Traversal_ fd st (List a) (List b) a b x y
     each =
         Base.traversal "[]"
             identity
@@ -268,7 +434,7 @@ traversal :
     String
     -> (s -> List a)
     -> ((a -> b) -> s -> t)
-    -> Traversal_ s t a b x y
+    -> Traversal_ fd st s t a b x y
 traversal =
     Base.traversal
 
@@ -279,7 +445,7 @@ traversal =
 
 {-| Lift an optic over an indexed traversal
 -}
-ixd : An_Optic_ pr ls s t a b -> Traversal_ ( ix, s ) t a b x y
+ixd : Optic () vw () rv s t a b a b -> Traversal_ fd st ( ix, s ) t a b x y
 ixd =
     Base.ixd
 
@@ -300,7 +466,7 @@ to =
 
 {-| swap the parent and target types of an iso for composition chains.
 -}
-swap : An_Iso_ s t a b -> Optic pr ls b a t s x y
+swap : An_Iso_ s t a b -> Iso_ fd vw st rv b a t s x y
 swap i =
     iso (name i) (from i) (to i)
 
@@ -320,7 +486,7 @@ get (foo << bar) myRecord
 ```
 
 -}
-get : A_Lens_ pr s t a b -> s -> a
+get : A_Getter_ st rv s t a b -> s -> a
 get =
     Base.get
 
@@ -336,7 +502,7 @@ get =
     --> []
 
 -}
-all : An_Optic_ pr ls s t a b -> s -> List a
+all : A_Fold_ vw st rv s t a b -> s -> List a
 all =
     Base.all
 
@@ -352,7 +518,7 @@ all =
     --> Just "Stuff"
 
 -}
-try : An_Optic_ pr ls s t a b -> s -> Maybe a
+try : A_Fold_ vw st rv s t a b -> s -> Maybe a
 try =
     Base.try
 
@@ -376,14 +542,14 @@ try =
     --> True
 
 -}
-has : An_Optic_ pr ls s t a b -> s -> Bool
+has : A_Fold_ vw st rv s t a b -> s -> Bool
 has =
     Base.has
 
 
 {-| alias for `has`
 -}
-is : An_Optic_ pr ls s t a b -> s -> Bool
+is : A_Fold_ vw st rv s t a b -> s -> Bool
 is =
     Base.has
 
@@ -401,7 +567,7 @@ map (foo << qux) ((+) 1) myRecord
 ```
 
 -}
-map : An_Optic_ pr ls s t a b -> (a -> b) -> s -> t
+map : A_Setter_ fd vw rv s t a b -> (a -> b) -> s -> t
 map =
     Base.map
 
@@ -411,7 +577,7 @@ map =
     over (foo << qux) ((+) 1) myRecord
 
 -}
-over : An_Optic_ pr ls s t a b -> (a -> b) -> s -> t
+over : A_Setter_ fd vw rv s t a b -> (a -> b) -> s -> t
 over =
     Base.map
 
@@ -429,21 +595,21 @@ set (foo << bar) "Hi!" myRecord
 ```
 
 -}
-set : An_Optic_ pr ls s t a b -> b -> s -> t
+set : A_Setter_ fd vw rv s t a b -> b -> s -> t
 set =
     Base.set
 
 
 {-| Use prism to reconstruct.
 -}
-new : A_Prism_ ls s t a b -> b -> t
+new : A_Review_ fd vw st s t a b -> b -> t
 new =
     Base.new
 
 
 {-| This function gives the name of the function as a string...
 -}
-name : An_Optic_ pr ls s t a b -> String
+name : An_Optic_ fd vw st rv s t a b -> String
 name =
     Base.name
 
@@ -475,7 +641,7 @@ name =
     --> {foo = Just {bar = Just {stuff = Just 2}}, qux = Nothing}
 
 -}
-just : Prism_ pr (Maybe a) (Maybe b) a b x y
+just : Prism_ fd st rv (Maybe a) (Maybe b) a b x y
 just =
     Maybe.just
 
@@ -483,7 +649,7 @@ just =
 {-| This accessor combinator lets you access values inside List.
 alias for [`List.Accessors.each`](List-Accessors#each)
 -}
-each : Traversal_ (List a) (List b) a b x y
+each : Traversal_ fd st (List a) (List b) a b x y
 each =
     List.each
 
@@ -491,7 +657,7 @@ each =
 {-| This accessor lets you traverse a list including the index of each element
 alias for [`List.Accessors.eachIdx`](List-Accessors#eachIdx)
 -}
-eachIdx : Traversal_ (List a) (List b) ( Int, a ) b x y
+eachIdx : Traversal_ fd st (List a) (List b) ( Int, a ) b x y
 eachIdx =
     List.eachIdx
 
@@ -499,7 +665,7 @@ eachIdx =
 {-| at: Structure Preserving accessor over List members.
 alias for [`List.Accessors.at`](List-Accessors#at)
 -}
-at : Int -> Traversal (List a) a x y
+at : Int -> Traversal fd st (List a) a x y
 at =
     List.at
 
@@ -524,7 +690,7 @@ alias for [`Array.Accessors.each`](Array-Accessors#each)
     --> {foo = Array.fromList [{bar = 3}, {bar = 4}, {bar = 5}]}
 
 -}
-every : Traversal_ (Array a) (Array b) a b x y
+every : Traversal_ fd st (Array a) (Array b) a b x y
 every =
     Array.each
 
@@ -564,7 +730,7 @@ alias for [`Array.Accessors.eachIdx`](Array-Accessors#eachIdx)
     --> {foo = [{bar = 3}, {bar = 4}, {bar = 5}] |> Array.fromList}
 
 -}
-everyIdx : Traversal_ (Array b) (Array c) ( Int, b ) c x y
+everyIdx : Traversal_ fd st (Array b) (Array c) ( Int, b ) c x y
 everyIdx =
     Array.eachIdx
 
@@ -594,7 +760,7 @@ everyIdx =
     --> arr
 
 -}
-ix : Int -> Traversal (Array a) a x y
+ix : Int -> Traversal fd st (Array a) a x y
 ix =
     Array.at
 
@@ -623,7 +789,7 @@ alias for [`Result.Accessors.onOk`](Result-Accessors#onOk)
     --> { foo = Ok { bar = 2 }, qux = Err "Not an Int" }
 
 -}
-ok : Prism_ pr (Result ignored a) (Result ignored b) a b x y
+ok : Prism_ fd st rv (Result ignored a) (Result ignored b) a b x y
 ok =
     Result.ok
 
@@ -652,7 +818,7 @@ alias for [`Result.Accessors.onErr`](Result-Accessors#onErr)
     --> { foo = Ok { bar = 2 }, qux = Err "NOT AN INT" }
 
 -}
-err : Prism_ pr (Result a ignored) (Result b ignored) a b x y
+err : Prism_ fd st rv (Result a ignored) (Result b ignored) a b x y
 err =
     Result.err
 
@@ -684,7 +850,7 @@ alias for [`Dict.Accessors.each`](Dict-Accessors#each)
     --> {foo = [("a", {bar = 3}), ("b", {bar = 4}), ("c", {bar = 5})] |> Dict.fromList}
 
 -}
-values : Traversal_ (Dict key a) (Dict key b) a b x y
+values : Traversal_ fd st (Dict key a) (Dict key b) a b x y
 values =
     Dict.each
 
@@ -724,7 +890,7 @@ alias for [`Dict.Accessors.eachIdx`](Dict-Accessors#eachIdx)
     --> {foo = [("a", {bar = 3}), ("b", {bar = 4}), ("c", {bar = 5})] |> Dict.fromList}
 
 -}
-keyed : Traversal_ (Dict key a) (Dict key b) ( key, a ) b x y
+keyed : Traversal_ fd st (Dict key a) (Dict key b) ( key, a ) b x y
 keyed =
     Dict.eachIdx
 
@@ -757,7 +923,7 @@ In terms of accessors, think of Dicts as records where each field is a Maybe.
     --> dict
 
 -}
-key : String -> Lens ls (Dict String a) (Maybe a) x y
+key : String -> Lens fd st vw (Dict String a) (Maybe a) x y
 key =
     Dict.at
 
@@ -790,7 +956,7 @@ In terms of accessors, think of Dicts as records where each field is a Maybe.
     --> dict
 
 -}
-keyI : Int -> Lens ls (Dict Int a) (Maybe a) x y
+keyI : Int -> Lens fd st vw (Dict Int a) (Maybe a) x y
 keyI =
     Dict.id
 
@@ -807,7 +973,7 @@ In terms of accessors, think of Dicts as records where each field is a Maybe.
     dict : Dict Char {bar : Int}
     dict = Dict.fromList [('C', {bar = 2})]
 
-    keyC : Char -> Lens ls (Dict Char { bar : Int })  (Maybe { bar : Int }) x y
+    keyC : Char -> Lens fd st vw (Dict Char { bar : Int })  (Maybe { bar : Int }) x y
     keyC =
         key_ String.fromChar
 
@@ -827,7 +993,7 @@ In terms of accessors, think of Dicts as records where each field is a Maybe.
     --> dict
 
 -}
-key_ : (comparable -> String) -> comparable -> Lens ls (Dict comparable a) (Maybe a) x y
+key_ : (comparable -> String) -> comparable -> Lens fd st vw (Dict comparable a) (Maybe a) x y
 key_ =
     Dict.at_
 
@@ -850,7 +1016,7 @@ alias for [`Tuple.Accessors.fst`](Tuple-Accessors#fst)
     --> ("IT'S OVER!!!", 1)
 
 -}
-fst : Lens_ ls ( a, two ) ( b, two ) a b x y
+fst : Lens_ fd st vw ( a, two ) ( b, two ) a b x y
 fst =
     Tuple.fst
 
@@ -875,7 +1041,7 @@ fst =
     --> ("IT'S OVER!!!", 9000)
 
 -}
-snd : Lens_ ls ( one, a ) ( one, b ) a b x y
+snd : Lens_ fd st vw ( one, a ) ( one, b ) a b x y
 snd =
     Tuple.snd
 
@@ -889,7 +1055,7 @@ snd =
     --> Color.red
 
 -}
-transparent : Iso pr ls Color TransparentColor x y
+transparent : Iso fd vw st rv Color TransparentColor x y
 transparent =
     Palette.transparent
 
@@ -903,7 +1069,7 @@ transparent =
     --> Color.red
 
 -}
-solid : Iso pr ls TransparentColor SolidColor x y
+solid : Iso fd vw st rv TransparentColor SolidColor x y
 solid =
     Palette.solid
 
@@ -919,7 +1085,7 @@ solid =
     --> Just Color.red
 
 -}
-hexA : Base.Prism pr String TransparentColor x y
+hexA : Base.Prism fd st rv String TransparentColor x y
 hexA =
     Palette.hexA
 
@@ -933,7 +1099,7 @@ hexA =
     --> Color.red
 
 -}
-oklch : Iso pr ls Color Oklch x y
+oklch : Iso fd vw st rv Color Oklch x y
 oklch =
     Oklch.color
 
@@ -947,7 +1113,7 @@ oklch =
     --> Color.red
 
 -}
-oklab : Iso pr ls Oklch Oklab x y
+oklab : Iso fd vw st rv Oklch Oklab x y
 oklab =
     Oklch.oklab
 
@@ -961,7 +1127,7 @@ oklab =
     --> Color.red
 
 -}
-elmui : Iso pr ls Color E.Color x y
+elmui : Iso fd vw st rv Color E.Color x y
 elmui =
     ElmUI.color
 
@@ -975,6 +1141,6 @@ elmui =
     --> Color.red
 
 -}
-hsluv : Iso pr ls Color HSLuv x y
+hsluv : Iso fd vw st rv Color HSLuv x y
 hsluv =
     HSLuv.iso

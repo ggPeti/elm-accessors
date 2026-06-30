@@ -65,7 +65,7 @@ suite =
         ]
 
 
-intMaybe : Iso pr ls (Maybe ()) Bool x y
+intMaybe : Iso fd vw st rv (Maybe ()) Bool x y
 intMaybe =
     iso "nulllyInt"
         (\maybeh ->
@@ -143,7 +143,7 @@ personFuzzer =
         |> Fuzz.andMap (Fuzz.list string |> Fuzz.map Array.fromList)
 
 
-isSetter : Optic pr ls a a c c c c -> Fuzzer a -> Fuzzer (c -> c) -> Fuzzer c -> Test
+isSetter : Base.A_Setter fd vw rv a c -> Fuzzer a -> Fuzzer (c -> c) -> Fuzzer c -> Test
 isSetter l fzr fnFzr val =
     describe ("isSetable: " ++ A.name l)
         [ fuzz fzr
@@ -166,7 +166,7 @@ isSetter l fzr fnFzr val =
         ]
 
 
-isLens : A_Lens pr a b -> Fuzzer a -> Fuzzer (b -> b) -> Fuzzer b -> Test
+isLens : A_Lens rv a b -> Fuzzer a -> Fuzzer (b -> b) -> Fuzzer b -> Test
 isLens l fzr valFn val =
     describe ("isLens: " ++ A.name l)
         [ isSetter l fzr valFn val
@@ -182,14 +182,14 @@ isLens l fzr valFn val =
         ]
 
 
-isPrism : A_Prism ls s a -> Fuzzer s -> Fuzzer a -> Test
-isPrism pr fzrS fzrA =
-    describe ("isPrism: " ++ A.name pr)
+isPrism : A_Prism vw st s a -> Fuzzer s -> Fuzzer a -> Test
+isPrism prism_ fzrS fzrA =
+    describe ("isPrism: " ++ A.name prism_)
         [ fuzz (Fuzz.tuple ( fzrS, fzrA ))
             "yin"
             (\( s, a ) ->
                 Expect.true "yin & yang"
-                    (prism_yin pr a && prism_yang pr s)
+                    (prism_yin prism_ a && prism_yang prism_ s)
             )
 
         -- , isTraversal
@@ -213,37 +213,37 @@ isIso i fzrs =
         ]
 
 
-setter_id : An_Optic pr ls s a -> s -> Bool
+setter_id : Base.A_Setter fd vw rv s a -> s -> Bool
 setter_id l s =
     A.map l identity s == s
 
 
-setter_composition : An_Optic pr ls s a -> s -> (a -> a) -> (a -> a) -> Bool
+setter_composition : Base.A_Setter fd vw rv s a -> s -> (a -> a) -> (a -> a) -> Bool
 setter_composition l s f g =
     A.map l f (A.map l g s) == A.map l (f << g) s
 
 
-setter_set_set : An_Optic pr ls s a -> s -> a -> a -> Bool
+setter_set_set : Base.A_Setter fd vw rv s a -> s -> a -> a -> Bool
 setter_set_set l s a b =
     A.set l b (A.set l a s) == A.set l b s
 
 
-lens_set_get : A_Lens pr b a -> b -> Bool
+lens_set_get : A_Lens rv b a -> b -> Bool
 lens_set_get l s =
     A.set l (A.get l s) s == s
 
 
-lens_get_set : A_Lens pr s a -> s -> a -> Bool
+lens_get_set : A_Lens rv s a -> s -> a -> Bool
 lens_get_set l s a =
     A.get l (A.set l a s) == a
 
 
-prism_yin : A_Prism ls s a -> a -> Bool
+prism_yin : A_Prism vw st s a -> a -> Bool
 prism_yin l a =
     try l (new l a) == Just a
 
 
-prism_yang : A_Prism ls s a -> s -> Bool
+prism_yang : A_Prism vw st s a -> s -> Bool
 prism_yang l s =
     (Maybe.withDefault s <| Maybe.map (new l) (try l s)) == s
 

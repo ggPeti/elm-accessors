@@ -29,7 +29,7 @@ import SelectList exposing (SelectList)
     --> { foo = SelectList.fromLists [{ bar = 2 }] { bar = 3 } [{ bar = 4 }, { bar = 5 }] }
 
 -}
-each : Traversal_ (SelectList a) (SelectList b) a b x y
+each : Traversal_ fd st (SelectList a) (SelectList b) a b x y
 each =
     Base.traversal ":[_]" SelectList.toList SelectList.map
 
@@ -67,7 +67,7 @@ each =
     --> {foo = SelectList.fromLists [{bar = 2}] {bar = 3} [{bar = 4}, {bar = 5}]}
 
 -}
-eachIdx : Traversal_ (SelectList a) (SelectList b) ( Int, a ) b x y
+eachIdx : Traversal_ fd st (SelectList a) (SelectList b) ( Int, a ) b x y
 eachIdx =
     Base.traversal "[#]"
         (SelectList.toList >> List.indexedMap Tuple.pair)
@@ -115,6 +115,6 @@ eachIdx =
     --> { foo = SelectList.fromLists [{ bar = 1 }] { bar = 20 } [{ bar = 3 }, { bar = 4 }] }
 
 -}
-selected : Lens ls (SelectList a) a x y
+selected : Lens fd st vw (SelectList a) a x y
 selected =
     Base.lens "[^]" SelectList.selected (\rec new -> SelectList.updateSelected (\_ -> new) rec)

@@ -23,7 +23,7 @@ import TransparentColor exposing (TransparentColor)
     --> Color.red
 
 -}
-transparent : Iso pr ls Color TransparentColor x y
+transparent : Iso fd vw st rv Color TransparentColor x y
 transparent =
     Base.iso "color_transparent"
         paletteFromColor
@@ -44,7 +44,7 @@ transparent =
     --> Color.red
 
 -}
-solid : Iso pr ls TransparentColor SolidColor x y
+solid : Iso fd vw st rv TransparentColor SolidColor x y
 solid =
     Base.iso "color_solid" TransparentColor.toColor (TransparentColor.fromColor TransparentColor.opaque)
 
@@ -61,7 +61,7 @@ solid =
     --> Just Color.red
 
 -}
-hexA : Prism pr String TransparentColor x y
+hexA : Prism fd st rv String TransparentColor x y
 hexA =
     Base.prism "color_hexa"
         TransparentColor.toHexA

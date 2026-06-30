@@ -39,7 +39,7 @@ import TreePath exposing (TreePath)
     --> tree "root" [ tree "A" [ leaf "b" ] , tree "x" [ leaf "y" ] ]
 
 -}
-at : TreePath -> Traversal (Tree a) a x y
+at : TreePath -> Traversal fd st (Tree a) a x y
 at p =
     path p << label_
 
@@ -69,7 +69,7 @@ at p =
     --> tree "ROOT" [ tree "a" [ leaf "b" ] , tree "x" [ leaf "y" ] ]
 
 -}
-label_ : Lens ls (Tree a) a x y
+label_ : Lens fd st vw (Tree a) a x y
 label_ =
     Base.lens "-label"
         Tree.label
@@ -101,7 +101,7 @@ label_ =
     --> tree "root" [ tree "gimme an A!" [ leaf "b" ] , tree "x" [ leaf "y" ] ]
 
 -}
-path : TreePath -> Traversal (Tree a) (Tree a) x y
+path : TreePath -> Traversal fd st (Tree a) (Tree a) x y
 path p =
     Base.traversal
         ("<" ++ String.join ", " (List.map String.fromInt p) ++ ">")
@@ -134,13 +134,13 @@ path p =
     --> tree "gimme an R!" [ tree "gimme an A!" [ leaf "gimme an B!" ] , tree "gimme an X!" [ leaf "gimme an Y!" ] ]
 
 -}
-each : Traversal_ (Tree a) (Tree b) a b x y
+each : Traversal_ fd st (Tree a) (Tree b) a b x y
 each =
     Base.traversal "<>" Tree.flatten Tree.map
 
 
 {-| -}
-at_ : (a -> String) -> a -> Traversal (Tree { z | id : a }) (Tree { z | id : a }) x y
+at_ : (a -> String) -> a -> Traversal fd st (Tree { z | id : a }) (Tree { z | id : a }) x y
 at_ toString id_ =
     Base.traversal
         ("<" ++ toString id_ ++ ">")
@@ -159,6 +159,6 @@ at_ toString id_ =
 
 
 {-| -}
-id : String -> Traversal (Tree { z | id : String }) (Tree { z | id : String }) x y
+id : String -> Traversal fd st (Tree { z | id : String }) (Tree { z | id : String }) x y
 id =
     at_ identity

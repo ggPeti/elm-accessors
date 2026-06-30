@@ -25,6 +25,6 @@ import Element as E
     --> Color.yellow
 
 -}
-color : Iso pr ls Color E.Color x y
+color : Iso fd vw st rv Color E.Color x y
 color =
     Base.iso "color_ui" (E.fromRgb << Color.toRgba) (E.toRgb >> Color.fromRgba)

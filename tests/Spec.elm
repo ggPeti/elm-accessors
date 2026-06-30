@@ -222,7 +222,7 @@ suite =
             ]
         , describe "making accessors"
             [ let
-                myFoo : Lens ls { m | foo : a } a x y
+                myFoo : Lens fd st vw { m | foo : a } a x y
                 myFoo =
                     lens ".foo" .foo (\rec val -> { rec | foo = val })
               in
@@ -249,7 +249,7 @@ suite =
                         updatedRec.foo.foo |> Expect.equal 6
                 ]
             , let
-                myOnEach : Traversal_ (List a) (List b) a b x y
+                myOnEach : Traversal_ fd st (List a) (List b) a b x y
                 myOnEach =
                     traversal "[]" identity List.map
               in
@@ -277,6 +277,68 @@ suite =
                         all (L.bar << List.each << L.foo) updatedExample
                             |> Expect.equal [ 1, 3 ]
                 ]
+            ]
+        , describe "capability aliases"
+            [ test "new aliases expose exactly the intended operations" <|
+                \_ ->
+                    let
+                        asFold : Fold fd (List Int) Int x y
+                        asFold =
+                            List.each
+
+                        asGetter : Getter vw fd { foo : Int } Int x y
+                        asGetter =
+                            L.foo
+
+                        asSetter : Setter st { foo : Int } Int x y
+                        asSetter =
+                            L.foo
+
+                        asReview : Review rv (Maybe Int) Int x y
+                        asReview =
+                            Maybe.just
+
+                        asBlind : Blind { foo : Int } Int x y
+                        asBlind =
+                            L.foo
+
+                        asWriteOnlyPrism : WriteOnlyPrism fd rv (Maybe Int) Int x y
+                        asWriteOnlyPrism =
+                            Maybe.just
+
+                        asReadOnlyPrism : ReadOnlyPrism st rv (Maybe Int) Int x y
+                        asReadOnlyPrism =
+                            Maybe.just
+
+                        asIso : Iso fd vw st rv Int String x y
+                        asIso =
+                            iso "intString" String.fromInt (Maybe.withDefault 0 << String.toInt)
+                    in
+                    { folded = all asFold [ 1, 2 ]
+                    , getterFolded = all asGetter { foo = 3 }
+                    , got = get asGetter { foo = 3 }
+                    , set = set asSetter 4 { foo = 3 }
+                    , isoSet = set asIso "4" 1
+                    , reviewed = new asReview 5
+                    , blindName = name asBlind
+                    , writeOnlyTry = try asWriteOnlyPrism (Just 6)
+                    , writeOnlyNew = new asWriteOnlyPrism 7
+                    , readOnlySet = set asReadOnlyPrism 8 (Just 0)
+                    , readOnlyNew = new asReadOnlyPrism 9
+                    }
+                        |> Expect.equal
+                            { folded = [ 1, 2 ]
+                            , getterFolded = [ 3 ]
+                            , got = 3
+                            , set = { foo = 4 }
+                            , isoSet = 4
+                            , reviewed = Just 5
+                            , blindName = ".foo"
+                            , writeOnlyTry = Just 6
+                            , writeOnlyNew = Just 7
+                            , readOnlySet = Just 8
+                            , readOnlyNew = Just 9
+                            }
             ]
         ]
 

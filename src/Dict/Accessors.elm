@@ -37,7 +37,7 @@ import Dict exposing (Dict)
     --> {foo = [("a", {bar = 3}), ("b", {bar = 4}), ("c", {bar = 5})] |> Dict.fromList}
 
 -}
-each : Traversal_ (Dict key a) (Dict key b) a b x y
+each : Traversal_ fd st (Dict key a) (Dict key b) a b x y
 each =
     Base.traversal "{_}"
         Dict.values
@@ -79,7 +79,7 @@ each =
     --> {foo = [("a", {bar = 3}), ("b", {bar = 4}), ("c", {bar = 5})] |> Dict.fromList}
 
 -}
-eachIdx : Traversal_ (Dict key a) (Dict key b) ( key, a ) b x y
+eachIdx : Traversal_ fd st (Dict key a) (Dict key b) ( key, a ) b x y
 eachIdx =
     Base.traversal "{_}"
         Dict.toList
@@ -114,7 +114,7 @@ In terms of accessors, think of Dicts as records where each field is a Maybe.
     --> dict
 
 -}
-at : String -> Lens ls (Dict String a) (Maybe a) x y
+at : String -> Lens fd st vw (Dict String a) (Maybe a) x y
 at =
     at_ identity
 
@@ -147,7 +147,7 @@ In terms of accessors, think of Dicts as records where each field is a Maybe.
     --> dict
 
 -}
-id : Int -> Lens ls (Dict Int a) (Maybe a) x y
+id : Int -> Lens fd st vw (Dict Int a) (Maybe a) x y
 id =
     at_ String.fromInt
 
@@ -164,7 +164,7 @@ In terms of accessors, think of Dicts as records where each field is a Maybe.
     dict : Dict Char {bar : Int}
     dict = Dict.fromList [('C', {bar = 2})]
 
-    atC : Char -> Lens ls (Dict Char {bar : Int})  (Maybe {bar : Int}) x y
+    atC : Char -> Lens fd st vw (Dict Char {bar : Int})  (Maybe {bar : Int}) x y
     atC =
         Dict.at_ String.fromChar
 
@@ -184,7 +184,7 @@ In terms of accessors, think of Dicts as records where each field is a Maybe.
     --> dict
 
 -}
-at_ : (comparable -> String) -> comparable -> Lens ls (Dict comparable a) (Maybe a) x y
+at_ : (comparable -> String) -> comparable -> Lens fd st vw (Dict comparable a) (Maybe a) x y
 at_ toS k =
     Base.lens ("{" ++ toS k ++ "}")
         (Dict.get k)

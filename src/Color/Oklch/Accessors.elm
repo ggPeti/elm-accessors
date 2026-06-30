@@ -31,7 +31,7 @@ import Color.Round as Round
     --> Color.red
 
 -}
-color : Iso pr ls Color Oklch x y
+color : Iso fd vw st rv Color Oklch x y
 color =
     Base.iso "color_oklch" fromColor (toColor >> Round.rgb)
 
@@ -46,6 +46,6 @@ color =
     --> Color.red
 
 -}
-oklab : Iso pr ls Oklch Oklab x y
+oklab : Iso fd vw st rv Oklch Oklab x y
 oklab =
     Base.iso "oklch_oklab" toOklab fromOklab

@@ -34,7 +34,7 @@ import Result exposing (Result(..))
     --> { foo = Ok { bar = 2 }, qux = Err "Not an Int" }
 
 -}
-ok : Prism_ pr (Result ignored a) (Result ignored b)  a b x y
+ok : Prism_ fd st rv (Result ignored a) (Result ignored b)  a b x y
 ok =
     Base.prism ".?[Ok]" Ok (unwrap (Err >> Err) Ok)
 
@@ -63,7 +63,7 @@ ok =
     --> { foo = Ok { bar = 2 }, qux = Err "NOT AN INT" }
 
 -}
-err : Prism_ pr (Result a ignored) (Result b ignored)  a b x y
+err : Prism_ fd st rv (Result a ignored) (Result b ignored)  a b x y
 err =
     Base.prism ".?[Err]" Err (unwrap Ok (Ok >> Err))
 

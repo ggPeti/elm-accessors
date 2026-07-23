@@ -27,7 +27,7 @@ import Color.Round as Round
     import Color
 
 
-    from color <| to color Color.red
+    new color <| get color Color.red
     --> Color.red
 
 -}
@@ -38,11 +38,11 @@ color =
 
 {-| oklab: This accessor lets you convert between oklch & avh4/elm-color
 
-    import Accessors exposing (to, from)
+    import Accessors exposing (get, new)
     import Color
 
 
-    from (color << oklab) <| to (color << oklab) Color.red
+    new (color << oklab) <| get (color << oklab) Color.red
     --> Color.red
 
 -}

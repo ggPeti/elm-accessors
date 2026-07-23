@@ -2,8 +2,8 @@ module Accessors exposing
     ( Optic
     , Iso, Lens, Prism, Traversal
     , Fold, Getter, Setter, Review, Blind, Case, Injector
-    , traversal, lens, prism, iso
-    , get, all, try, has, is, map, over, set, new, name, to, from, swap
+    , traversal, lens, prism, iso, sets, to, unto, from
+    , get, all, try, has, is, map, over, set, new, re, un, name
     , ixd
     , Iso_, Lens_, Prism_, Traversal_
     , Fold_, Getter_, Setter_, Review_, Blind_
@@ -38,7 +38,7 @@ module Accessors exposing
 
 Accessors are built using these functions:
 
-@docs traversal, lens, prism, iso
+@docs traversal, lens, prism, iso, sets, to, unto, from
 
 
 ## Action functions
@@ -46,7 +46,7 @@ Accessors are built using these functions:
 Action functions are functions that take an accessor and let you perform a
 specific action on data using that accessor.
 
-@docs get, all, try, has, is, map, over, set, new, name, to, from, swap
+@docs get, all, try, has, is, map, over, set, new, re, un, name
 
 
 ## Lifters for composing w/ indexed optics
@@ -450,25 +450,46 @@ ixd =
     Base.ixd
 
 
-{-| Get the inverse of an isomorphism
--}
-from : An_Iso_ s t a b -> b -> t
-from =
-    Base.from
 
 
-{-| Alias of `get` for isomorphisms
+{-| Make a setter from an update function.
 -}
-to : An_Iso_ s t a b -> s -> a
+sets : ((a -> b) -> s -> t) -> Setter_ setterSt s t a b x y
+sets =
+    Base.sets
+
+
+{-| Make a getter from a function.
+-}
+to : (s -> a) -> Getter_ getterVw getterFd s t a b x y
 to =
     Base.to
 
-
-{-| swap the parent and target types of an iso for composition chains.
+{-| Make a review from a function.
 -}
-swap : An_Iso_ s t a b -> Iso_ fd vw st rv b a t s x y
-swap i =
-    iso (name i) (from i) (to i)
+unto : (b -> t) -> Review reviewRv t b x y
+unto =
+    Base.unto
+
+
+{-| Turn an isomorphism around.
+-}
+from : An_Iso_ s t a b -> Iso_ fd vw st rv b a t s x y
+from =
+    Base.from
+
+{-| Turn a review around into a getter.
+-}
+re : A_Review_ reviewFd reviewVw reviewSt s t a b -> Getter getterVw getterFd b t x y
+re =
+    Base.re
+
+
+{-| Turn a getter around into a review.
+-}
+un : A_Getter_ getterSt getterRv s t a b -> Review reviewRv a s x y
+un =
+    Base.un
 
 
 
@@ -1051,7 +1072,7 @@ snd =
     import Color
 
 
-    from transparent <| to transparent Color.red
+    new transparent <| get transparent Color.red
     --> Color.red
 
 -}
@@ -1065,7 +1086,7 @@ transparent =
     import Color
 
 
-    from (transparent << solid) <| to (transparent << solid) Color.red
+    new (transparent << solid) <| get (transparent << solid) Color.red
     --> Color.red
 
 -}
@@ -1079,9 +1100,9 @@ solid =
     import Color
 
 
-    new (hexA << swap transparent) Color.red
+    new (hexA << from transparent) Color.red
     -->  "#CC0000"
-    try (hexA << swap transparent) "#C00F" -- with alpha channel
+    try (hexA << from transparent) "#C00F" -- with alpha channel
     --> Just Color.red
 
 -}
@@ -1095,7 +1116,7 @@ hexA =
     import Color
 
 
-    from oklch <| to oklch Color.red
+    new oklch <| get oklch Color.red
     --> Color.red
 
 -}
@@ -1109,7 +1130,7 @@ oklch =
     import Color
 
 
-    from (oklch << oklab) <| to (oklch << oklab) Color.red
+    new (oklch << oklab) <| get (oklch << oklab) Color.red
     --> Color.red
 
 -}
@@ -1123,7 +1144,7 @@ oklab =
     import Color
 
 
-    from elmui <| to elmui Color.red
+    new elmui <| get elmui Color.red
     --> Color.red
 
 -}
@@ -1137,7 +1158,7 @@ elmui =
     import Color
 
 
-    from hsluv <| to hsluv Color.red
+    new hsluv <| get hsluv Color.red
     --> Color.red
 
 -}

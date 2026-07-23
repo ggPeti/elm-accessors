@@ -15,11 +15,11 @@ import TransparentColor exposing (TransparentColor)
 
 {-| transparent: This accessor lets you convert between avh4/elm-color & tesk9/palette TransparentColor
 
-    import Accessors exposing (to, from)
+    import Accessors exposing (get, new)
     import Color
 
 
-    from transparent <| to transparent Color.red
+    new transparent <| get transparent Color.red
     --> Color.red
 
 -}
@@ -36,11 +36,11 @@ transparent =
 
 {-| solid: This accessor lets you convert between tesk9/palette TransparentColor && SolidColor
 
-    import Accessors exposing (to, from)
+    import Accessors exposing (get, new)
     import Color
 
 
-    from (transparent << solid) <| to (transparent << solid) Color.red
+    new (transparent << solid) <| get (transparent << solid) Color.red
     --> Color.red
 
 -}
@@ -51,13 +51,13 @@ solid =
 
 {-| hex: This accessor lets you convert between tesk9/palette TransparentColor && SolidColor
 
-    import Accessors exposing (swap, new, try)
+    import Accessors exposing (from, new, try)
     import Color
 
 
-    new (hexA << swap transparent) Color.red
+    new (hexA << from transparent) Color.red
     -->  "#CC0000"
-    try (hexA << swap transparent) "#C00F" -- with alpha channel
+    try (hexA << from transparent) "#C00F" -- with alpha channel
     --> Just Color.red
 
 -}

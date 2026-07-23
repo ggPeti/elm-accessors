@@ -14,11 +14,11 @@ import HSLuv exposing (HSLuv)
 
 {-| iso: This accessor lets you convert between oklch & avh4/elm-color
 
-    import Accessors exposing (to, from)
+    import Accessors exposing (get, new)
     import Color
 
 
-    from iso <| to iso Color.red
+    new iso <| get iso Color.red
     --> Color.red
 
 -}

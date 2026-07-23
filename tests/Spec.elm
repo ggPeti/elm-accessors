@@ -294,9 +294,29 @@ suite =
                         asSetter =
                             L.foo
 
+                        asSetsSetter : Setter setsSt { foo : Int, bar : String } Int x y
+                        asSetsSetter =
+                            sets (\fn rec -> { rec | foo = fn rec.foo })
+
                         asReview : Review rv (Maybe Int) Int x y
                         asReview =
                             Maybe.just
+
+                        asReGetter : Getter getterVw getterFd Int (Maybe Int) x y
+                        asReGetter =
+                            re asReview
+
+                        asToGetter : Getter getterVw2 getterFd2 String Int x y
+                        asToGetter =
+                            to String.length
+
+                        asUnReview : Review unRv Int { foo : Int } x y
+                        asUnReview =
+                            un asGetter
+
+                        asUntoReview : Review untoRv String Int x y
+                        asUntoReview =
+                            unto String.fromInt
 
                         asBlind : Blind { foo : Int } Int x y
                         asBlind =
@@ -313,13 +333,26 @@ suite =
                         asIso : Iso fd vw st rv Int String x y
                         asIso =
                             iso "intString" String.fromInt (Maybe.withDefault 0 << String.toInt)
+
+                        asIsoFrom : Iso fromFd fromVw fromSt fromRv String Int x y
+                        asIsoFrom =
+                            from asIso
                     in
                     { folded = all asFold [ 1, 2 ]
                     , getterFolded = all asGetter { foo = 3 }
                     , got = get asGetter { foo = 3 }
                     , set = set asSetter 4 { foo = 3 }
+                    , setsMapped = map asSetsSetter ((+) 2) { foo = 3, bar = "kept" }
                     , isoSet = set asIso "4" 1
+                    , isoFromGet = get asIsoFrom "4"
+                    , isoFromNew = new asIsoFrom 4
                     , reviewed = new asReview 5
+                    , reviewGetter = get asReGetter 5
+                    , reviewGetterFolded = all asReGetter 5
+                    , toGetter = get asToGetter "hello"
+                    , toGetterFolded = all asToGetter "hi"
+                    , unReview = new asUnReview { foo = 8 }
+                    , untoReview = new asUntoReview 9
                     , blindName = name asBlind
                     , injectorSet = set asInjector 8 (Just 6)
                     , injectorNew = new asInjector 7
@@ -331,8 +364,17 @@ suite =
                             , getterFolded = [ 3 ]
                             , got = 3
                             , set = { foo = 4 }
+                            , setsMapped = { foo = 5, bar = "kept" }
                             , isoSet = 4
+                            , isoFromGet = 4
+                            , isoFromNew = "4"
                             , reviewed = Just 5
+                            , reviewGetter = Just 5
+                            , reviewGetterFolded = [ Just 5 ]
+                            , toGetter = 5
+                            , toGetterFolded = [ 2 ]
+                            , unReview = 8
+                            , untoReview = "9"
                             , blindName = ".foo"
                             , injectorSet = Just 8
                             , injectorNew = Just 7

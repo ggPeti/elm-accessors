@@ -18,10 +18,10 @@ import Element as E
     import Color
 
 
-    from color <| to color Color.red
+    new color <| get color Color.red
     --> Color.red
 
-    from color <| to color Color.yellow
+    new color <| get color Color.yellow
     --> Color.yellow
 
 -}

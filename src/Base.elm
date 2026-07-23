@@ -2,8 +2,8 @@ module Base exposing
     ( Optic
     , Iso, Lens, Prism, Traversal
     , Fold, Getter, Setter, Review, Blind, Case, Injector
-    , iso, lens, prism, traversal
-    , get, all, try, has, map, set, new, name, to, from
+    , iso, lens, prism, traversal, sets, to, unto, from
+    , get, all, try, has, map, set, new, re, un, name
     , ixd
     , Iso_, Lens_, Prism_, Traversal_
     , Fold_, Getter_, Setter_, Review_, Blind_
@@ -28,12 +28,12 @@ module Base exposing
 
 Accessors are built using these functions:
 
-@docs iso, lens, prism, traversal
+@docs iso, lens, prism, traversal, sets, to, unto, from
 
 
 # Actions
 
-@docs get, all, try, has, map, set, new, name, to, from, over
+@docs get, all, try, has, map, set, new, re, un, name, over
 
 
 # Accessor Lifters for Indexed operations
@@ -436,6 +436,20 @@ traversal n sa abst sub =
         |> dot sub
 
 
+{-| Make a setter from an update function.
+-}
+sets : ((a -> b) -> s -> t) -> Setter_ setterSt s t a b x y
+sets abst sub =
+    Optic
+        { view = void "Can't call `view` with a Setter"
+        , list = void "Can't call `list` with a Setter"
+        , make = void "Can't call `make` with a Setter"
+        , over = abst
+        , name = ""
+        }
+        |> dot sub
+
+
 {-| An isomorphism constructor.
 -}
 iso :
@@ -478,33 +492,79 @@ ixd p =
 
 
 
--- {-| Get the inverse of an isomorphism
--- -}
 
 
-from : An_Iso_ s t a b -> b -> t
-from =
-    get << swap
-
-
-swap : An_Iso_ s t a b -> An_Iso_ b a t s
-swap accessor =
+{-| Turn an isomorphism around.
+-}
+from : An_Iso_ s t a b -> Iso_ fd vw st rv b a t s x y
+from accessor =
     let
         i =
             id
                 |> accessor
                 |> internal
     in
-    iso (String.reverse i.name)
-        i.make
-        i.view
+    iso i.name i.make i.view
 
 
-{-| Alias of `get` for isomorphisms
+{-| Turn a review around into a getter.
 -}
-to : An_Iso_ s t a b -> s -> a
-to =
-    get
+re : A_Review_ reviewFd reviewVw reviewSt s t a b -> Getter getterVw getterFd b t x y
+re accessor sub =
+    let
+        i =
+            id
+                |> accessor
+                |> internal
+    in
+    Optic
+        { view = i.make
+        , list = i.make >> List.singleton
+        , make = void "Can't call `make` with a Getter"
+        , over = void "Can't call `over` with a Getter"
+        , name = i.name
+        }
+        |> dot sub
+
+
+{-| Make a getter from a function.
+-}
+to : (s -> a) -> Getter_ getterVw getterFd s t a b x y
+to sa sub =
+    Optic
+        { view = sa
+        , list = sa >> List.singleton
+        , make = void "Can't call `make` with a Getter"
+        , over = void "Can't call `over` with a Getter"
+        , name = ""
+        }
+        |> dot sub
+
+{-| Turn a getter around into a review.
+-}
+un : A_Getter_ getterSt getterRv s t a b -> Review reviewRv a s x y
+un accessor sub =
+    let
+        i =
+            id
+                |> accessor
+                |> internal
+    in
+    Optic
+        { view = void "Can't call `view` with a Review"
+        , list = void "Can't call `list` with a Review"
+        , make = i.view
+        , over = void "Can't call `over` with a Review"
+        , name = i.name
+        }
+        |> dot sub
+
+
+{-| Make a review from a function.
+-}
+unto : (b -> t) -> Review reviewRv t b x y
+unto =
+    un << to
 
 
 id : Optic_ fd vw st rv a b a b

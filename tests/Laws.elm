@@ -10,9 +10,9 @@ import Accessors as A
         , Iso
         , Iso_
         , from
+        , get
         , iso
         , new
-        , to
         , try
         )
 import Array exposing (Array)
@@ -250,12 +250,12 @@ prism_yang l s =
 
 iso_hither : An_Iso s a -> s -> Bool
 iso_hither l s =
-    (from l <| to l s) == s
+    (get (from l) <| get l s) == s
 
 
 iso_yon : An_Iso s a -> a -> Bool
 iso_yon l a =
-    (to l <| from l a) == a
+    (get l <| get (from l) a) == a
 
 
 
